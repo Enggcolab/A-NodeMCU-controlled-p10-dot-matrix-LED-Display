@@ -1,0 +1,96 @@
+
+
+//----------------------------------------Include Library
+//----------------------------------------
+#include <DMDESP.h>
+#include <fonts/DejaVuSans9.h>
+#include <fonts/EMSans6x8.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+//----------------------------------------
+
+//----------------------------------------DMD Configuration (P10 Panel)
+#define DISPLAYS_WIDE 2 //--> Panel Columns
+#define DISPLAYS_HIGH 2 //--> Panel Rows
+DMDESP Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  //--> Number of Panels P10 used (Column, Row)
+
+#define DHTPIN 2
+#define DHTTYPE DHT11
+DHT_Unified dht(DHTPIN, DHTTYPE);
+char chr[4];
+char chr2[5];
+uint32_t delayMS;
+//----------------------------------------
+
+//========================================================================VOID SETUP()
+void setup() {
+  //----------------------------------------DMDESP Setup
+ 
+  Disp.start(); //--> Run the DMDESP library
+  Disp.setBrightness(10); //--> Brightness level
+  Disp.setFont(EMSans6x8); //--> Determine the font used
+
+
+ sensor_t sensor;
+  dht.begin();
+  dht.temperature().getSensor(&sensor);
+  
+   dht.humidity().getSensor(&sensor);
+   delayMS = sensor.min_delay / 1000;
+  //----------------------------------------
+}
+//========================================================================
+
+//========================================================================VOID LOOP()
+ 
+void loop() {
+  
+  // Get temperature event and print its value.
+  
+  Disp.loop(); //--> Run "Disp.loop" to refresh the 
+ //delay(delayMS);
+ Disp.setFont(EMSans6x8);
+  Disp.drawText(4, 0, "WELCOME"); //--> Display text "Disp.drawText(x position, y position, text)"
+  Scrolling_Text(9, 50); //--> Show running text "Scrolling_Text(y position, speed);"
+
+sensors_event_t event;
+  dht.temperature().getEvent(&event);
+    dtostrf(event.temperature,4,2,chr);
+   Disp.setFont(DejaVuSans9); //--> Determine the font used
+  Disp.drawText(35,16,"T:"); //--> Display text "Disp.drawText(x position, y position, text)"
+  Disp.drawText(48,16,chr);
+  Disp.drawText(58,16,"C");
+  
+  // Get humidity event and print its value.
+  dht.humidity().getEvent(&event);
+  
+    dtostrf(event.relative_humidity,5,2,chr2);
+    Disp.drawText(35, 24,"H:"); //--> Display text "Disp.drawText(x position, y position, text)"
+  Disp.drawText(45, 24,chr2);
+  Disp.drawText(56, 24,"%");
+
+  
+}
+
+static char *Text[] = {"DEPARTMENT OF ECE RGUKT BASAR "};
+
+void Scrolling_Text(int y, uint8_t scrolling_speed) {
+  static uint32_t pM;
+  static uint32_t x;
+  int width = Disp.width();
+   Disp.setFont(EMSans6x8); //--> Determine the font used
+  int fullScroll = Disp.textWidth(Text[0]) + width;
+  if((millis() - pM) > scrolling_speed) { 
+    pM = millis();
+    if (x < fullScroll) {
+      ++x;
+    } else {
+      x = 0;
+      return;
+    }
+    Disp.drawText(width - x, y, Text[0]);
+  }  
+}
+
+
